@@ -1,7 +1,12 @@
+import subprocess
 import json
+import sys
 
-with open('report.json') as f:
-    data = json.load(f)
+url = sys.argv[1]
+data = subprocess.check_output(
+    ["./node_modules/.bin/lighthouse", url, "--output", "json"])
+
+data = json.loads(data)
 
 audits = data['audits']
 
