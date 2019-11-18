@@ -1,6 +1,7 @@
 import subprocess
 import json
 import sys
+import csv
 
 url = sys.argv[1]
 data = subprocess.check_output(
@@ -10,6 +11,8 @@ data = json.loads(data)
 
 audits = data['audits']
 
+w = csv.writer(sys.stdout)
+
 for audit_name, audit in audits.items():
     if audit['score'] != None and audit['score'] <= 0:
-        print(audit['title'], audit['description'])
+        w.writerow([audit['title'], audit['description']])
