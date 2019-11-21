@@ -2,3 +2,7 @@ This script is for the automation of data extraction from accessibility reports 
 
 - First run `npm install lighthouse`
 - Run this in the shell: `python reportdataextraction.py https://example.com/ > report.csv`
+
+Log in problem - fix
+Test against multiple URLs
+Count number of times same problem flags in report
