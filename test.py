@@ -8,6 +8,7 @@ import json
 import subprocess
 import sys
 import csv
+import os
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -38,6 +39,7 @@ pages = [
 
 
 def main():
+    ensureLighthouse()
     browser = setupHeadlessChrome()
     loginToPage(browser)
     awaitFirstDrawOnPage(browser)
@@ -150,9 +152,6 @@ def runLighthouseReport(page, cookies=None):
         cookies = json.dumps(cookies)
         cmd.extend(['--extra-cookies', cookies])
 
-        # print("cookies:", cookies)
-        # print("cmd:", cmd)
-
     out = subprocess.check_output(cmd)
     out = json.loads(out)
     return out
@@ -160,6 +159,24 @@ def runLighthouseReport(page, cookies=None):
 
 def closeBrowser(browser):
     browser.quit()
+
+
+def ensureLighthouse():
+    here = os.path.dirname(__file__)
+    if here:
+        os.chdir(here)
+    if os.path.exists('lighthouse'):
+        return
+    # Branch containing --extra-cookies
+    # Until https://github.com/GoogleChrome/lighthouse/pull/9170 merged
+    print('installing lighthouse')
+    subprocess.check_call(
+        ["git", "clone", "https://github.com/RynatSibahatau/lighthouse.git"])
+    os.chdir('lighthouse')
+    subprocess.check_call(["npm", "install", "yarn"])
+    subprocess.check_call(["./node_modules/.bin/yarn"])
+    subprocess.check_call(["./node_modules/.bin/yarn", "build-all"])
+    os.chdir('..')
 
 
 if __name__ == '__main__':
