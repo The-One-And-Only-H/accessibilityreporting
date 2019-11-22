@@ -19,14 +19,22 @@ from selenium.webdriver.common.by import By
 # brew cask install chromedriver
 
 
-class ClassPage:
+class Page:
     def __init__(self, _url, _requiresCookies):
         self.url = _url
         self.requiresCookies = _requiresCookies
 
 
-pages = [ClassPage('https://account.develop.bigwhitewall.com/log-in',
-                   True), ClassPage('https://develop.bigwhitewall.com/', False)]
+class Problem:
+    def __init__(self, title, description):
+        self.title = title
+        self.description = description
+        self.count = 1
+
+
+pages = [
+    Page('https://account.develop.bigwhitewall.com/log-in', False),
+    Page('https://develop.bigwhitewall.com/', True)]
 
 
 def main():
@@ -36,14 +44,40 @@ def main():
     cookies = browser.get_cookies()
     closeBrowser(browser)
     results = processPages(pages, cookies)
-    # import pdb
-    # pdb.set_trace()
+    summary = aggregateResults(results)
+    emitResult(summary)
+
+
+def aggregateResults(results):
+    problems = {}
+    for result in results:
+        audits = result['audits']
+        for audit_name, audit in audits.items():
+            if audit['score'] != None and audit['score'] <= 0:
+                if audit_name in problems:
+                    problems[audit_name].count += 1
+                else:
+                    problems[audit_name] = Problem(
+                        audit['title'], audit['description'])
+    return problems
+
+
+def emitResult(summary):
+    problems = list(summary.values())
+    problems.sort(key=lambda p: (-p.count, p.title.lower()))
+
+    # Writes flagged items as CSV file
+    with open('report.csv', 'w') as f:
+        w = csv.writer(f)
+        w.writerow(["Count", "Title", "Description"])
+        for p in problems:
+            w.writerow([p.count, p.title, p.description])
 
 
 def setupHeadlessChrome():
     chrome_options = Options()
-    # Uncomment later after debugging <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    # chrome_options.add_argument("--headless")
+    # Comment out below for debugging <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    chrome_options.add_argument("--headless")
     browser = webdriver.Chrome(
         executable_path="chromedriver", options=chrome_options)
 
@@ -103,12 +137,13 @@ def processPages(pages, cookies):
     results = []
     for page in pages:
         if page.requiresCookies:
-            results.append(checkPageWithLighthouse(page, cookies))
+            results.append(runLighthouseReport(page, cookies))
         else:
-            results.append(checkPageWithLighthouse(page))
+            results.append(runLighthouseReport(page))
+    return results
 
 
-def checkPageWithLighthouse(page, cookies=None):
+def runLighthouseReport(page, cookies=None):
     cmd = ['node', './lighthouse/lighthouse-cli', page.url, '--output', 'json']
     if cookies:
         cookies = [{'name': c['name'], 'value': c['value']} for c in cookies]
@@ -120,18 +155,7 @@ def checkPageWithLighthouse(page, cookies=None):
 
     out = subprocess.check_output(cmd)
     out = json.loads(out)
-
-    audits = out['audits']
-
-    # print("audits:", audits)
-
-    # Writes flagged items as CSV file
-    w = csv.writer(open("report.csv", "w"))
-
-    for audit_name, audit in audits.items():
-        # print("auditScore:", audit['score'])
-        if audit['score'] != None and audit['score'] <= 0:
-            w.writerow([audit['title'], audit['description']])
+    return out
 
 
 def closeBrowser(browser):
@@ -140,7 +164,3 @@ def closeBrowser(browser):
 
 if __name__ == '__main__':
     main()
-
-    #w = csv.writer(open("report.csv", "w"))
-
-    #w.writerow("Hello world")
