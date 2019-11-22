@@ -39,15 +39,25 @@ pages = [
 
 
 def main():
+    args = parseCommandLine()
     ensureLighthouse()
-    browser = setupHeadlessChrome()
+    browser = setupHeadlessChrome(args)
     loginToPage(browser)
     awaitFirstDrawOnPage(browser)
     cookies = browser.get_cookies()
     closeBrowser(browser)
-    results = processPages(pages, cookies)
+    results = processPages(args, pages, cookies)
     summary = aggregateResults(results)
     emitResult(summary)
+
+
+def parseCommandLine():
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument('--visible', action='store_true',
+                        help='display browser')
+    args = parser.parse_args()
+    return args
 
 
 def aggregateResults(results):
@@ -76,10 +86,10 @@ def emitResult(summary):
             w.writerow([p.count, p.title, p.description])
 
 
-def setupHeadlessChrome():
+def setupHeadlessChrome(args):
     chrome_options = Options()
-    # Comment out below for debugging <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    chrome_options.add_argument("--headless")
+    if not args.visible:
+        chrome_options.add_argument("--headless")
     browser = webdriver.Chrome(
         executable_path="chromedriver", options=chrome_options)
 
@@ -93,12 +103,11 @@ def loginToPage(browser):
         'https://account.develop.bigwhitewall.com/log-in')
 
     # This will await the first load on the login page, based on that 'maincontent' is drawn
-    element = WebDriverWait(browser, 10).until(
+    WebDriverWait(browser, 10).until(
         EC.presence_of_element_located((By.ID, "maincontent"))
     )
 
     print('Loading completed')
-    print(element)
 
     # Time to collect some user info. "input" can be useful here
     # username = h@neverbland.com
@@ -135,18 +144,20 @@ def awaitFirstDrawOnPage(browser):
     )
 
 
-def processPages(pages, cookies):
+def processPages(args, pages, cookies):
     results = []
     for page in pages:
         if page.requiresCookies:
-            results.append(runLighthouseReport(page, cookies))
+            results.append(runLighthouseReport(args, page, cookies))
         else:
-            results.append(runLighthouseReport(page))
+            results.append(runLighthouseReport(args, page))
     return results
 
 
-def runLighthouseReport(page, cookies=None):
+def runLighthouseReport(args, page, cookies=None):
     cmd = ['node', './lighthouse/lighthouse-cli', page.url, '--output', 'json']
+    if not args.visible:
+        cmd.append('--chrome-flags="--headless"')
     if cookies:
         cookies = [{'name': c['name'], 'value': c['value']} for c in cookies]
         cookies = json.dumps(cookies)
