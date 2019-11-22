@@ -78,6 +78,7 @@ def loginToPage(browser):
     browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Accept')]")[0].click()
 
+    # Clicks wrong button and takes user to register page <<<<<<<<<<<<<<<<<<<<<<<<<<<<
     # Press login button
     browser.find_element_by_class_name("light--MuiButtonBase-root").click()
 

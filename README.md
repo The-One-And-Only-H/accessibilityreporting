@@ -3,6 +3,12 @@ This script is for the automation of data extraction from accessibility reports 
 - First run `npm install lighthouse`
 - Run this in the shell: `python reportdataextraction.py https://example.com/ > report.csv`
 
-Log in problem - fix
 Test against multiple URLs
 Count number of times same problem flags in report
+
+Clone pull request of Lighthouse in order to fetch cookie: https://github.com/RynatSibahatau/lighthouse
+Run `cd lighthouse`
+Run `yarn`
+Run `yarn build-all`
+
+Tools: Selenium, Lighthouse (see PR)
