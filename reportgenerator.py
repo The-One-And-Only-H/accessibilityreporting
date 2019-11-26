@@ -49,7 +49,7 @@ def main():
     summary = aggregateResults(results)
     emitResult(summary)
 
-# Optional argument to see script running in the shell and browser
+# Optional argument to see script running in the browser
 
 
 def parseCommandLine():
