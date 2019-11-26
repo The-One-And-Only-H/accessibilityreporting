@@ -6,7 +6,6 @@
 
 import json
 import subprocess
-import sys
 import csv
 import os
 
@@ -21,9 +20,9 @@ from selenium.webdriver.common.by import By
 
 
 class Page:
-    def __init__(self, _url, _requiresCookies):
-        self.url = _url
-        self.requiresCookies = _requiresCookies
+    def __init__(self, url, requiresCookies):
+        self.url = url
+        self.requiresCookies = requiresCookies
 
 
 class Problem:
@@ -50,6 +49,8 @@ def main():
     summary = aggregateResults(results)
     emitResult(summary)
 
+# Optional argument to see script running in the shell and browser
+
 
 def parseCommandLine():
     from argparse import ArgumentParser
@@ -58,6 +59,8 @@ def parseCommandLine():
                         help='display browser')
     args = parser.parse_args()
     return args
+
+# Filter through problems flagged by the Lighthouse report and collate dupilcates
 
 
 def aggregateResults(results):
@@ -73,6 +76,8 @@ def aggregateResults(results):
                         audit['title'], audit['description'])
     return problems
 
+# Create CSV file ordering collated data by count then alphabetically
+
 
 def emitResult(summary):
     problems = list(summary.values())
@@ -84,6 +89,8 @@ def emitResult(summary):
         w.writerow(["Count", "Title", "Description"])
         for p in problems:
             w.writerow([p.count, p.title, p.description])
+
+# Hide Selenium running in browser when running script
 
 
 def setupHeadlessChrome(args):
@@ -123,7 +130,7 @@ def loginToPage(browser):
     # Accept the cookies
     browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Accept')]")[0].click()
-    element = WebDriverWait(browser, 10).until_not(
+    WebDriverWait(browser, 10).until_not(
         EC.presence_of_element_located(
             (By.XPATH, "//button//*[contains(text(), 'Accept')]"))
     )
@@ -131,10 +138,12 @@ def loginToPage(browser):
     # Press the login button
     browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Log in')]")[0].click()
-    element = WebDriverWait(browser, 10).until_not(
+    WebDriverWait(browser, 10).until_not(
         EC.presence_of_element_located(
             (By.XPATH, "//button//*[contains(text(), 'Log in')]"))
     )
+
+# Detect element on landing page after log in
 
 
 def awaitFirstDrawOnPage(browser):
@@ -142,6 +151,8 @@ def awaitFirstDrawOnPage(browser):
         EC.presence_of_element_located(
             (By.XPATH, "//h2[contains(text(), 'Hi')]"))
     )
+
+# Detect whether Lighthouse should be run with cookies or not
 
 
 def processPages(args, pages, cookies):
@@ -152,6 +163,8 @@ def processPages(args, pages, cookies):
         else:
             results.append(runLighthouseReport(args, page))
     return results
+
+# Run Lighthouse from the command line
 
 
 def runLighthouseReport(args, page, cookies=None):
@@ -170,6 +183,8 @@ def runLighthouseReport(args, page, cookies=None):
 
 def closeBrowser(browser):
     browser.quit()
+
+# Ensure the below Lighthouse pull request taking cookies is installed
 
 
 def ensureLighthouse():
