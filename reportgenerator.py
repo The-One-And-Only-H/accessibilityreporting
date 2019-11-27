@@ -29,7 +29,7 @@ class Problem:
     def __init__(self, title, description):
         self.title = title
         self.description = description
-        self.count = 1
+        self.count = 0
 
 
 pages = [
@@ -61,6 +61,7 @@ def parseCommandLine():
     return args
 
 # Filter through problems flagged by the Lighthouse report and collate dupilcates
+# Count number of items in details of error from JSON blob
 
 
 def aggregateResults(results):
@@ -69,11 +70,14 @@ def aggregateResults(results):
         audits = result['audits']
         for audit_name, audit in audits.items():
             if audit['score'] != None and audit['score'] <= 0:
-                if audit_name in problems:
-                    problems[audit_name].count += 1
-                else:
+                if audit_name not in problems:
                     problems[audit_name] = Problem(
                         audit['title'], audit['description'])
+                problem = problems[audit_name]
+                if 'details' in audit and 'items' in audit['details'] and audit['details']['items']:
+                    problem.count += len(audit['details']['items'])
+                else:
+                    problem.count += 1
     return problems
 
 # Create CSV file ordering collated data by count then alphabetically
