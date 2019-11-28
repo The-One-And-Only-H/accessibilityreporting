@@ -4,6 +4,7 @@
 # 3. Install selenium for web driver management
 # 4. Verity selenium (google "verify python package")
 
+import yaml
 import json
 import subprocess
 import csv
@@ -18,6 +19,8 @@ from selenium.webdriver.common.by import By
 # Install chromedrivers with brew
 # brew cask install chromedriver
 
+from axe_selenium_python import Axe
+
 
 class Page:
     def __init__(self, url, requiresCookies):
@@ -26,26 +29,23 @@ class Page:
 
 
 class Problem:
-    def __init__(self, title, description):
-        self.title = title
+    def __init__(self, id, description, helpUrl):
+        self.id = id
         self.description = description
+        self.helpUrl = helpUrl
         self.count = 0
-
-
-pages = [
-    Page('https://account.develop.bigwhitewall.com/log-in', False),
-    Page('https://develop.bigwhitewall.com/', True), Page('https://develop.bigwhitewall.com/community/all', True)]
 
 
 def main():
     args = parseCommandLine()
-    ensureLighthouse()
+    pages = loadInputFile(args)
     browser = setupHeadlessChrome(args)
     loginToPage(browser)
     awaitFirstDrawOnPage(browser)
+    runAxeReport(browser, pages)
     cookies = browser.get_cookies()
     closeBrowser(browser)
-    results = processPages(args, pages, cookies)
+    results = processPages(browser, pages)
     summary = aggregateResults(results)
     emitResult(summary)
 
@@ -57,8 +57,19 @@ def parseCommandLine():
     parser = ArgumentParser()
     parser.add_argument('--visible', action='store_true',
                         help='display browser')
+    # Run script with urls.yaml or any .yaml file containing URLs - add this to README <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    parser.add_argument(
+        'input', help='runs script against chosen list of URLs')
     args = parser.parse_args()
     return args
+
+# Loads data from yaml file passed through the command line
+
+
+def loadInputFile(args):
+    with open(args.input) as f:
+        pages = yaml.load(f.read(), Loader=yaml.SafeLoader)
+    return pages
 
 # Filter through problems flagged by the Lighthouse report and collate dupilcates
 # Count number of items in details of error from JSON blob
@@ -72,7 +83,7 @@ def aggregateResults(results):
             if audit['score'] != None and audit['score'] <= 0:
                 if audit_name not in problems:
                     problems[audit_name] = Problem(
-                        audit['title'], audit['description'])
+                        audit['id'], audit['description'], audit['helpUrl'])
                 problem = problems[audit_name]
                 if 'details' in audit and 'items' in audit['details'] and audit['details']['items']:
                     problem.count += len(audit['details']['items'])
@@ -85,14 +96,14 @@ def aggregateResults(results):
 
 def emitResult(summary):
     problems = list(summary.values())
-    problems.sort(key=lambda p: (-p.count, p.title.lower()))
+    problems.sort(key=lambda p: (-p.count, p.id.lower()))
 
     # Writes flagged items as CSV file
     with open('report.csv', 'w') as f:
         w = csv.writer(f)
-        w.writerow(["Count", "Title", "Description"])
+        w.writerow(["Count", "Title", "Description", "More info"])
         for p in problems:
-            w.writerow([p.count, p.title, p.description])
+            w.writerow([p.count, p.id, p.description, p.helpUrl])
 
 # Hide Selenium running in browser when running script
 
@@ -156,57 +167,35 @@ def awaitFirstDrawOnPage(browser):
             (By.XPATH, "//h2[contains(text(), 'Hi')]"))
     )
 
+
 # Detect whether Lighthouse should be run with cookies or not
 
 
-def processPages(args, pages, cookies):
+def processPages(browser, pages):
     results = []
     for page in pages:
         if page.requiresCookies:
-            results.append(runLighthouseReport(args, page, cookies))
+            results.append(runAxeReport(browser, page))
         else:
-            results.append(runLighthouseReport(args, page))
+            results.append(runAxeReport(browser, page))
     return results
 
-# Run Lighthouse from the command line
+# Run Axe from the command line
 
 
-def runLighthouseReport(args, page, cookies=None):
-    cmd = ['node', './lighthouse/lighthouse-cli', page.url, '--output', 'json']
-    if not args.visible:
-        cmd.append('--chrome-flags="--headless"')
-    if cookies:
-        cookies = [{'name': c['name'], 'value': c['value']} for c in cookies]
-        cookies = json.dumps(cookies)
-        cmd.extend(['--extra-cookies', cookies])
-
-    out = subprocess.check_output(cmd)
-    out = json.loads(out)
-    return out
+def runAxeReport(browser, page):
+    browser.get(page.url)
+    axe = Axe(browser)
+    # Inject axe-core javascript into page
+    axe.inject()
+    # Run axe accessibility checks
+    results = axe.run()
+    # Write results to file
+    axe.write_results(results, 'test.json')
 
 
 def closeBrowser(browser):
     browser.quit()
-
-# Ensure the below Lighthouse pull request taking cookies is installed
-
-
-def ensureLighthouse():
-    here = os.path.dirname(__file__)
-    if here:
-        os.chdir(here)
-    if os.path.exists('lighthouse'):
-        return
-    # Branch containing --extra-cookies
-    # Until https://github.com/GoogleChrome/lighthouse/pull/9170 merged
-    print('installing lighthouse')
-    subprocess.check_call(
-        ["git", "clone", "https://github.com/RynatSibahatau/lighthouse.git"])
-    os.chdir('lighthouse')
-    subprocess.check_call(["npm", "install", "yarn"])
-    subprocess.check_call(["./node_modules/.bin/yarn"])
-    subprocess.check_call(["./node_modules/.bin/yarn", "build-all"])
-    os.chdir('..')
 
 
 if __name__ == '__main__':
