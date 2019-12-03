@@ -4,6 +4,8 @@
 # 3. Install selenium for web driver management
 # 4. Verity selenium (google "verify python package")
 
+# pip install pyyaml
+
 import yaml
 import json
 import subprocess
@@ -22,15 +24,10 @@ from selenium.webdriver.common.by import By
 from axe_selenium_python import Axe
 
 
-class Page:
-    def __init__(self, url, requiresCookies):
-        self.url = url
-        self.requiresCookies = requiresCookies
-
-
 class Problem:
-    def __init__(self, id, description, helpUrl):
-        self.id = id
+    def __init__(self, impact, help, description, helpUrl):
+        self.impact = impact
+        self.help = help
         self.description = description
         self.helpUrl = helpUrl
         self.count = 0
@@ -39,13 +36,7 @@ class Problem:
 def main():
     args = parseCommandLine()
     pages = loadInputFile(args)
-    browser = setupHeadlessChrome(args)
-    loginToPage(browser)
-    awaitFirstDrawOnPage(browser)
-    runAxeReport(browser, pages)
-    cookies = browser.get_cookies()
-    closeBrowser(browser)
-    results = processPages(browser, pages)
+    results = processPages(args, pages)
     summary = aggregateResults(results)
     emitResult(summary)
 
@@ -68,23 +59,23 @@ def parseCommandLine():
 
 def loadInputFile(args):
     with open(args.input) as f:
-        pages = yaml.load(f.read(), Loader=yaml.SafeLoader)
-    return pages
+        data = yaml.load(f.read(), Loader=yaml.SafeLoader)
+    return data['pages']
 
-# Filter through problems flagged by the Lighthouse report and collate dupilcates
+# Filter through problems flagged by the Axe report and collate dupilcates
 # Count number of items in details of error from JSON blob
 
 
 def aggregateResults(results):
     problems = {}
     for result in results:
-        audits = result['audits']
-        for audit_name, audit in audits.items():
-            if audit['score'] != None and audit['score'] <= 0:
-                if audit_name not in problems:
-                    problems[audit_name] = Problem(
-                        audit['id'], audit['description'], audit['helpUrl'])
-                problem = problems[audit_name]
+        audits = result['violations']
+        for audit in audits:
+            if audit['impact'] != None:
+                if audit['id'] not in problems:
+                    problems[audit['id']] = Problem(
+                        audit['impact'], audit['help'], audit['description'], audit['helpUrl'])
+                problem = problems[audit['id']]
                 if 'details' in audit and 'items' in audit['details'] and audit['details']['items']:
                     problem.count += len(audit['details']['items'])
                 else:
@@ -96,14 +87,14 @@ def aggregateResults(results):
 
 def emitResult(summary):
     problems = list(summary.values())
-    problems.sort(key=lambda p: (-p.count, p.id.lower()))
+    problems.sort(key=lambda p: (-p.count))
 
     # Writes flagged items as CSV file
     with open('report.csv', 'w') as f:
         w = csv.writer(f)
-        w.writerow(["Count", "Title", "Description", "More info"])
+        w.writerow(["Count", "Priority", "Title", "Description", "More info"])
         for p in problems:
-            w.writerow([p.count, p.id, p.description, p.helpUrl])
+            w.writerow([p.count, p.impact, p.help, p.description, p.helpUrl])
 
 # Hide Selenium running in browser when running script
 
@@ -168,30 +159,32 @@ def awaitFirstDrawOnPage(browser):
     )
 
 
-# Detect whether Lighthouse should be run with cookies or not
+# Detect whether Axe should be run with log in details or not
 
 
-def processPages(browser, pages):
+def processPages(args, pages):
     results = []
     for page in pages:
-        if page.requiresCookies:
-            results.append(runAxeReport(browser, page))
-        else:
-            results.append(runAxeReport(browser, page))
+        browser = setupHeadlessChrome(args)
+        if page.get('require_login'):
+            loginToPage(browser)
+            awaitFirstDrawOnPage(browser)
+        results.append(runAxeReport(browser, args, page))
+        closeBrowser(browser)
     return results
 
 # Run Axe from the command line
 
 
-def runAxeReport(browser, page):
-    browser.get(page.url)
+def runAxeReport(browser, args, page):
+    pageUrl = page['url']
+    browser.get(pageUrl)
     axe = Axe(browser)
     # Inject axe-core javascript into page
     axe.inject()
     # Run axe accessibility checks
     results = axe.run()
-    # Write results to file
-    axe.write_results(results, 'test.json')
+    return results
 
 
 def closeBrowser(browser):
