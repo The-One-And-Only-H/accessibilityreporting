@@ -32,6 +32,9 @@ class Problem:
         self.helpUrl = helpUrl
         self.count = 0
 
+    def incrementCount(self, value):
+        self.count += value
+
 
 def main():
     args = parseCommandLine()
@@ -48,7 +51,6 @@ def parseCommandLine():
     parser = ArgumentParser()
     parser.add_argument('--visible', action='store_true',
                         help='display browser')
-    # Run script with urls.yaml or any .yaml file containing URLs - add this to README <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     parser.add_argument(
         'input', help='runs script against chosen list of URLs')
     args = parser.parse_args()
@@ -63,7 +65,6 @@ def loadInputFile(args):
     return data['pages']
 
 # Filter through problems flagged by the Axe report and collate dupilcates
-# Count number of items in details of error from JSON blob
 
 
 def aggregateResults(results):
@@ -76,10 +77,7 @@ def aggregateResults(results):
                     problems[audit['id']] = Problem(
                         audit['impact'], audit['help'], audit['description'], audit['helpUrl'])
                 problem = problems[audit['id']]
-                if 'details' in audit and 'items' in audit['details'] and audit['details']['items']:
-                    problem.count += len(audit['details']['items'])
-                else:
-                    problem.count += 1
+                problem.incrementCount(len(audit['nodes']))
     return problems
 
 # Create CSV file ordering collated data by count then alphabetically
@@ -110,7 +108,7 @@ def setupHeadlessChrome(args):
 
 
 def loginToPage(browser):
-    print('Load login page')
+    print('Load page')
 
     browser.get(
         'https://account.develop.bigwhitewall.com/log-in')
