@@ -35,12 +35,13 @@ class ProblemAggregator:
     def addResult(self, result):
         audits = result['violations']
         for audit in audits:
-            if audit['impact'] != None:
-                if audit['id'] not in self.problems:
-                    self.problems[audit['id']] = Problem(
-                        audit['impact'], audit['help'], audit['description'], audit['helpUrl'])
-                problem = self.problems[audit['id']]
-                problem.incrementCount(len(audit['nodes']))
+            if audit['impact'] is None:
+                continue
+            if audit['id'] not in self.problems:
+                self.problems[audit['id']] = Problem(
+                    audit['impact'], audit['help'], audit['description'], audit['helpUrl'])
+            problem = self.problems[audit['id']]
+            problem.incrementCount(len(audit['nodes']))
 
     def getSummary(self):
         return self.problems
