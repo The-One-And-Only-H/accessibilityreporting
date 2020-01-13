@@ -49,8 +49,8 @@ class ProblemAggregator:
 
 def main():
     args = parseCommandLine()
-    pages = loadInputFile(args)
-    results = processPages(args, pages)
+    data = loadInputFile(args)
+    results = processPages(args, data)
     summary = aggregateResults(results)
     emitResults(summary)
 
@@ -72,7 +72,7 @@ def parseCommandLine():
 def loadInputFile(args):
     with open(args.input) as file:
         data = yaml.load(file.read(), Loader=yaml.SafeLoader)
-    return data['pages']
+    return data
 
 
 # Filter through problems flagged by the Axe report and collate duplicates
@@ -116,11 +116,10 @@ def setupHeadlessChrome(args):
     return browser
 
 
-def loginToPage(browser):
-    logger.info('Logging in')
+def loginToPage(browser, url):
+    logger.info('Logging into %s', url)
 
-    browser.get(
-        'https://account.develop.bigwhitewall.com/log-in')
+    browser.get(url)
 
     # This will await the first load on the login page, based on that 'maincontent' is drawn
     WebDriverWait(browser, 10).until(
@@ -168,12 +167,12 @@ def awaitFirstDrawOnPage(browser):
 # Detect whether Axe should be run with log in details or not
 
 
-def processPages(args, pages):
+def processPages(args, data):
     results = []
-    for page in pages:
+    for page in data['pages']:
         browser = setupHeadlessChrome(args)
         if page.get('require_login'):
-            loginToPage(browser)
+            loginToPage(browser, data['login']['url'])
             awaitFirstDrawOnPage(browser)
         results.append(runAxeReport(browser, args, page))
         closeBrowser(browser)
