@@ -197,5 +197,6 @@ def closeBrowser(browser):
     browser.quit()
 
 
+# Execute main only if script is being executed, not imported
 if __name__ == '__main__':
     main()
