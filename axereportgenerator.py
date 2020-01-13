@@ -82,7 +82,12 @@ def aggregateResults(results):
 
 def emitResults(summary):
     problems = list(summary.values())
-    problems.sort(key=lambda p: (-p.count))
+
+    # Sort the problems into numerical order
+    def getCount(p):
+        return p.count
+
+    problems.sort(key=getCount, reverse=True)
 
     # Writes flagged items as CSV file
     with open('report.csv', 'w') as f:
