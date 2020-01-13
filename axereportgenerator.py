@@ -1,3 +1,4 @@
+import logging
 import yaml
 import csv
 
@@ -8,6 +9,11 @@ from selenium.webdriver.support import expected_conditions as SeleniumExpectedCo
 from selenium.webdriver.common.by import By
 from axe_selenium_python import Axe
 from argparse import ArgumentParser
+
+logger = logging.getLogger()
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s')
 
 
 class Problem:
@@ -110,7 +116,7 @@ def setupHeadlessChrome(args):
 
 
 def loginToPage(browser):
-    print('Load page')
+    logger.info('Loads login page')
 
     browser.get(
         'https://account.develop.bigwhitewall.com/log-in')
@@ -121,7 +127,7 @@ def loginToPage(browser):
             (By.ID, "maincontent"))
     )
 
-    print('Loading completed')
+    logger.info('Login page loading completed')
 
     # Time to collect some user info. "input" can be useful here
     # username = h@neverbland.com
@@ -178,6 +184,7 @@ def processPages(args, pages):
 
 
 def runAxeReport(browser, args, page):
+    logger.info("Running Axe against %s", page['url'])
     pageUrl = page['url']
     browser.get(pageUrl)
     axe = Axe(browser)
