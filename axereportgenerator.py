@@ -116,7 +116,7 @@ def setupHeadlessChrome(args):
 
 
 def loginToPage(browser):
-    logger.info('Loads login page')
+    logger.info('Logging in')
 
     browser.get(
         'https://account.develop.bigwhitewall.com/log-in')
@@ -126,8 +126,6 @@ def loginToPage(browser):
         SeleniumExpectedConditions.presence_of_element_located(
             (By.ID, "maincontent"))
     )
-
-    logger.info('Login page loading completed')
 
     # Time to collect some user info. "input" can be useful here
     # username = h@neverbland.com
