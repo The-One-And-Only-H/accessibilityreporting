@@ -1,27 +1,13 @@
-# 1. Install Python3
-# 1b. Make sure Python3 is installed (python --version)
-# 2. Add pip3 (or make sure it is installed)
-# 3. Install selenium for web driver management
-# 4. Verity selenium (google "verify python package")
-
-# pip install pyyaml
-
 import yaml
-import json
-import subprocess
 import csv
-import os
 
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as SeleniumExpectedConditions
 from selenium.webdriver.common.by import By
-
-# Install chromedrivers with brew
-# brew cask install chromedriver
-
 from axe_selenium_python import Axe
+from argparse import ArgumentParser
 
 
 class Problem:
@@ -36,18 +22,35 @@ class Problem:
         self.count += value
 
 
+class ProblemAggregator:
+    def __init__(self):
+        self.problems = {}
+
+    def addResult(self, result):
+        audits = result['violations']
+        for audit in audits:
+            if audit['impact'] != None:
+                if audit['id'] not in self.problems:
+                    self.problems[audit['id']] = Problem(
+                        audit['impact'], audit['help'], audit['description'], audit['helpUrl'])
+                problem = self.problems[audit['id']]
+                problem.incrementCount(len(audit['nodes']))
+
+    def getSummary(self):
+        return self.problems
+
+
 def main():
     args = parseCommandLine()
     pages = loadInputFile(args)
     results = processPages(args, pages)
     summary = aggregateResults(results)
-    emitResult(summary)
+    emitResults(summary)
 
 # Optional argument to see script running in the browser
 
 
 def parseCommandLine():
-    from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('--visible', action='store_true',
                         help='display browser')
@@ -60,30 +63,24 @@ def parseCommandLine():
 
 
 def loadInputFile(args):
-    with open(args.input) as f:
-        data = yaml.load(f.read(), Loader=yaml.SafeLoader)
+    with open(args.input) as file:
+        data = yaml.load(file.read(), Loader=yaml.SafeLoader)
     return data['pages']
 
-# Filter through problems flagged by the Axe report and collate dupilcates
+
+# Filter through problems flagged by the Axe report and collate duplicates
 
 
 def aggregateResults(results):
-    problems = {}
+    ag = ProblemAggregator()
     for result in results:
-        audits = result['violations']
-        for audit in audits:
-            if audit['impact'] != None:
-                if audit['id'] not in problems:
-                    problems[audit['id']] = Problem(
-                        audit['impact'], audit['help'], audit['description'], audit['helpUrl'])
-                problem = problems[audit['id']]
-                problem.incrementCount(len(audit['nodes']))
-    return problems
+        ag.addResult(result)
+    return ag.getSummary()
 
 # Create CSV file ordering collated data by count then alphabetically
 
 
-def emitResult(summary):
+def emitResults(summary):
     problems = list(summary.values())
     problems.sort(key=lambda p: (-p.count))
 
@@ -98,7 +95,7 @@ def emitResult(summary):
 
 
 def setupHeadlessChrome(args):
-    chrome_options = Options()
+    chrome_options = ChromeOptions()
     if not args.visible:
         chrome_options.add_argument("--headless")
     browser = webdriver.Chrome(
@@ -115,7 +112,8 @@ def loginToPage(browser):
 
     # This will await the first load on the login page, based on that 'maincontent' is drawn
     WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located((By.ID, "maincontent"))
+        SeleniumExpectedConditions.presence_of_element_located(
+            (By.ID, "maincontent"))
     )
 
     print('Loading completed')
@@ -135,7 +133,7 @@ def loginToPage(browser):
     browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Accept')]")[0].click()
     WebDriverWait(browser, 10).until_not(
-        EC.presence_of_element_located(
+        SeleniumExpectedConditions.presence_of_element_located(
             (By.XPATH, "//button//*[contains(text(), 'Accept')]"))
     )
 
@@ -143,7 +141,7 @@ def loginToPage(browser):
     browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Log in')]")[0].click()
     WebDriverWait(browser, 10).until_not(
-        EC.presence_of_element_located(
+        SeleniumExpectedConditions.presence_of_element_located(
             (By.XPATH, "//button//*[contains(text(), 'Log in')]"))
     )
 
@@ -152,7 +150,7 @@ def loginToPage(browser):
 
 def awaitFirstDrawOnPage(browser):
     WebDriverWait(browser, 10).until(
-        EC.presence_of_element_located(
+        SeleniumExpectedConditions.presence_of_element_located(
             (By.XPATH, "//h2[contains(text(), 'Hi')]"))
     )
 
