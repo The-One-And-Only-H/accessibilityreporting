@@ -2,15 +2,15 @@ This script is for the automation of data extraction from accessibility reports 
 
 # Set up
 
-1. Install Python 3 and make sure Python 3 is installed with `python --version`
-2. Install pip 3
-3. Install Selenium for Web Driver Management
-4. Install PyYAML with `pip install pyyaml`
-5. Install Chromedrivers with Brew with `brew cask install chromedriver`
+1. Create a virtual environment with `virtualenv -p python3 env`
+2. Activate the virtualenv with `source env/bin/activate`
+3. Install requirements with `pip install -r requirements.txt`
+4. Install Chromedrivers with Brew with `brew cask install chromedriver`
 
 # Run script
 
-- Run this command in the shell: `python AxeReportGenerator.py [yaml file]`
+1. Activate the virtualenv with `source env/bin/activate`
+2. Run the script with `python AxeReportGenerator.py [yaml file]`
 
 ## Required parameters
 
@@ -19,10 +19,12 @@ This script is for the automation of data extraction from accessibility reports 
 
 ### Yaml file structure example
 
-`pages:`
-`- url: https://account.develop.bigwhitewall.com/log-in`
-`- url: https://develop.bigwhitewall.com/`
-`require_login: true`
+```yaml
+pages:
+  - url: https://account.develop.bigwhitewall.com/log-in
+  - url: https://develop.bigwhitewall.com/
+    require_login: true
+```
 
 ## Flags
 
