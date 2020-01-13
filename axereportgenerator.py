@@ -83,7 +83,7 @@ def aggregateResults(results):
 def emitResults(summary):
     problems = list(summary.values())
 
-    # Sort the problems into numerical order
+    # Sort problems in order of highest occurrence to lowest
     def getCount(p):
         return p.count
 
