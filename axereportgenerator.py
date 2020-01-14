@@ -10,22 +10,12 @@ from selenium.webdriver.common.by import By
 from axe_selenium_python import Axe
 from argparse import ArgumentParser
 
+# Log more information messages to the shell
+
 logger = logging.getLogger()
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(message)s')
-
-
-class Problem:
-    def __init__(self, impact, help, description, helpUrl):
-        self.impact = impact
-        self.help = help
-        self.description = description
-        self.helpUrl = helpUrl
-        self.count = 0
-
-    def incrementCount(self, value):
-        self.count += value
 
 
 class ProblemAggregator:
@@ -45,6 +35,18 @@ class ProblemAggregator:
 
     def getSummary(self):
         return self.problems
+
+
+class Problem:
+    def __init__(self, impact, help, description, helpUrl):
+        self.impact = impact
+        self.help = help
+        self.description = description
+        self.helpUrl = helpUrl
+        self.count = 0
+
+    def incrementCount(self, value):
+        self.count += value
 
 
 def main():
@@ -74,34 +76,6 @@ def loadInputFile(args):
         data = yaml.load(file.read(), Loader=yaml.SafeLoader)
     return data
 
-
-# Filter through problems flagged by the Axe report and collate duplicates
-
-
-def aggregateResults(results):
-    ag = ProblemAggregator()
-    for result in results:
-        ag.addResult(result)
-    return ag.getSummary()
-
-# Create CSV file ordering collated data by count then alphabetically
-
-
-def emitResults(summary):
-    problems = list(summary.values())
-
-    # Sort problems in order of highest occurrence to lowest
-    def getCount(p):
-        return p.count
-
-    problems.sort(key=getCount, reverse=True)
-
-    # Writes flagged items as CSV file
-    with open('report.csv', 'w') as f:
-        w = csv.writer(f)
-        w.writerow(["Count", "Priority", "Title", "Description", "More info"])
-        for p in problems:
-            w.writerow([p.count, p.impact, p.help, p.description, p.helpUrl])
 
 # Hide Selenium running in browser when running script
 
@@ -195,6 +169,34 @@ def runAxeReport(browser, args, page):
 
 def closeBrowser(browser):
     browser.quit()
+
+# Filter through problems flagged by the Axe report and collate duplicates
+
+
+def aggregateResults(results):
+    ag = ProblemAggregator()
+    for result in results:
+        ag.addResult(result)
+    return ag.getSummary()
+
+# Create CSV file ordering collated data by count then alphabetically
+
+
+def emitResults(summary):
+    problems = list(summary.values())
+
+    # Sort problems in order of highest occurrence to lowest
+    def getCount(p):
+        return p.count
+
+    problems.sort(key=getCount, reverse=True)
+
+    # Writes flagged items as CSV file
+    with open('report.csv', 'w') as f:
+        w = csv.writer(f)
+        w.writerow(["Count", "Priority", "Title", "Description", "More info"])
+        for p in problems:
+            w.writerow([p.count, p.impact, p.help, p.description, p.helpUrl])
 
 
 # Execute main only if script is being executed, not imported
