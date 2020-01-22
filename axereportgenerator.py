@@ -59,7 +59,10 @@ def parseCommandLine():
     parser = ArgumentParser()
     parser.add_argument('--visible', action='store_true',
                         help='display browser')
-    parser.add_argument('--standard', choices=['wcag2a', 'wcag2aa'], default=None, help='choose which standard to test against')
+    standards = ['wcag2a', 'wcag2aa']
+    parser.add_argument('--standard', choices=standards, 
+                        nargs="*", metavar="NAME", 
+                        help='choose which standard to test against (choices: %s, default: all)' % ', '.join(standards))
     parser.add_argument(
         'input', help='runs script against chosen list of URLs')
     args = parser.parse_args()
