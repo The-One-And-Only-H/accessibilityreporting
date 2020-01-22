@@ -34,7 +34,6 @@ class ProblemAggregator:
     def getSummary(self):
         return self.problems
 
-
 class Problem:
     def __init__(self, impact, help, description, helpUrl):
         self.impact = impact
@@ -46,14 +45,12 @@ class Problem:
     def incrementCount(self, value):
         self.count += value
 
-
 def main():
     args = parseCommandLine()
     data = loadInputFile(args)
     results = processPages(args, data)
     summary = aggregateResults(results)
     emitResults(summary)
-
 
 def parseCommandLine():
     '''
@@ -67,7 +64,7 @@ def parseCommandLine():
                         help='display browser')
     standards = ['wcag2a', 'wcag2aa']
     parser.add_argument('--standard', choices=standards, 
-                        nargs="*", metavar="NAME", 
+                        metavar='NAME', 
                         help='choose which standard to test against (choices: %s, default: all)' % ', '.join(standards))
     parser.add_argument(
         'input', help='runs script against chosen list of URLs')
@@ -80,7 +77,6 @@ def loadInputFile(args):
         data = yaml.load(file.read(), Loader=yaml.SafeLoader)
     return data
 
-
 def setupHeadlessChrome(args):
     '''Hide Selenium running in browser when running script'''
     chrome_options = ChromeOptions()
@@ -90,7 +86,6 @@ def setupHeadlessChrome(args):
         executable_path="chromedriver", options=chrome_options)
 
     return browser
-
 
 def loginToPage(browser, url):
     logger.info('Logging into %s', url)
@@ -137,7 +132,6 @@ def awaitFirstDrawOnPage(browser):
             (By.XPATH, "//h2[contains(text(), 'Hi')]"))
     )
 
-
 def processPages(args, data):
     '''Detect whether Axe should be run with log in details or not'''
     results = []
@@ -159,9 +153,18 @@ def runAxeReport(browser, args, page):
     '''Inject axe-core javascript into page'''
     axe.inject()
     '''Run axe accessibility checks'''
-    results = axe.run()
+    if args.standard == 'wcag2a':
+        logger.info('Collating wcag2a results')
+        axe_options = {"runOnly": {"type": "tag", "value": ["wcag2a"]}}
+        results = axe.run(options=axe_options)
+    elif args.standard == 'wcag2aa':
+        logger.info('Collating wcag2aa results')
+        axe_options = {"runOnly": {"type": "tag", "value": ["wcag2aa"]}}
+        results = axe.run(options=axe_options)
+    else:
+        logger.info('Collating all results')
+        results = axe.run()
     return results
-
 
 def closeBrowser(browser):
     browser.quit()
@@ -189,7 +192,6 @@ def emitResults(summary):
         w.writerow(["Count", "Priority", "Title", "Description", "More info"])
         for p in problems:
             w.writerow([p.count, p.impact, p.help, p.description, p.helpUrl])
-
 
 '''Execute main only if script is being executed, not imported'''
 if __name__ == '__main__':
