@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from axe_selenium_python import Axe
 from argparse import ArgumentParser
 
-# Log more information messages to the shell
+'''Log more information messages to the shell'''
 logger = logging.getLogger()
 logging.basicConfig(
     level=logging.INFO,
@@ -54,8 +54,14 @@ def main():
     summary = aggregateResults(results)
     emitResults(summary)
 
-# Optional argument to see script running in the browser
+
 def parseCommandLine():
+    '''
+    Optional arguments to:
+    - See the script running in the browser
+    - Choose an accessibility standard to test against
+    - Pass which URLs you want to test
+    '''
     parser = ArgumentParser()
     parser.add_argument('--visible', action='store_true',
                         help='display browser')
@@ -68,15 +74,15 @@ def parseCommandLine():
     args = parser.parse_args()
     return args
 
-# Loads data from yaml file passed through the command line
+'''Loads data from yaml file passed through the command line'''
 def loadInputFile(args):
     with open(args.input) as file:
         data = yaml.load(file.read(), Loader=yaml.SafeLoader)
     return data
 
 
-# Hide Selenium running in browser when running script
 def setupHeadlessChrome(args):
+    '''Hide Selenium running in browser when running script'''
     chrome_options = ChromeOptions()
     if not args.visible:
         chrome_options.add_argument("--headless")
@@ -91,24 +97,24 @@ def loginToPage(browser, url):
 
     browser.get(url)
 
-    # This will await the first load on the login page, based on that 'maincontent' is drawn
+    '''This will await the first load on the login page, based on that 'maincontent' is drawn'''
     WebDriverWait(browser, 10).until(
         SeleniumExpectedConditions.presence_of_element_located(
             (By.ID, "maincontent"))
     )
 
-    # Time to collect some user info. "input" can be useful here
-    # username = h@neverbland.com
-    # password = Password1
+    '''Time to collect some user info. "input" can be useful here'''
+    '''username = h@neverbland.com'''
+    '''password = Password1'''
 
-    # Here we do find the first input element and inputs some text into it
+    '''Here we do find the first input element and inputs some text into it'''
     usernameElement = browser.find_element_by_name("userNameOrEmail")
     passwordElement = browser.find_element_by_name("password")
 
     usernameElement.send_keys('h@neverbland.com')
     passwordElement.send_keys('Password1')
 
-    # Accept the cookies
+    '''Accept the cookies'''
     browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Accept')]")[0].click()
     WebDriverWait(browser, 10).until_not(
@@ -116,7 +122,7 @@ def loginToPage(browser, url):
             (By.XPATH, "//button//*[contains(text(), 'Accept')]"))
     )
 
-    # Press the login button
+    '''Press the login button'''
     browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Log in')]")[0].click()
     WebDriverWait(browser, 10).until_not(
@@ -124,16 +130,16 @@ def loginToPage(browser, url):
             (By.XPATH, "//button//*[contains(text(), 'Log in')]"))
     )
 
-# Detect element on landing page after log in
 def awaitFirstDrawOnPage(browser):
+    '''Detect element on landing page after log in'''
     WebDriverWait(browser, 10).until(
         SeleniumExpectedConditions.presence_of_element_located(
             (By.XPATH, "//h2[contains(text(), 'Hi')]"))
     )
 
 
-# Detect whether Axe should be run with log in details or not
 def processPages(args, data):
+    '''Detect whether Axe should be run with log in details or not'''
     results = []
     for page in data['pages']:
         browser = setupHeadlessChrome(args)
@@ -144,15 +150,15 @@ def processPages(args, data):
         closeBrowser(browser)
     return results
 
-# Run Axe from the command line
 def runAxeReport(browser, args, page):
+    '''Run Axe from the command line'''
     logger.info("Running Axe against %s", page['url'])
     pageUrl = page['url']
     browser.get(pageUrl)
     axe = Axe(browser)
-    # Inject axe-core javascript into page
+    '''Inject axe-core javascript into page'''
     axe.inject()
-    # Run axe accessibility checks
+    '''Run axe accessibility checks'''
     results = axe.run()
     return results
 
@@ -160,24 +166,24 @@ def runAxeReport(browser, args, page):
 def closeBrowser(browser):
     browser.quit()
 
-# Filter through problems flagged by the Axe report and collate duplicates
 def aggregateResults(results):
+    '''Filter through problems flagged by the Axe report and collate duplicates'''
     ag = ProblemAggregator()
     for result in results:
         ag.addResult(result)
     return ag.getSummary()
 
-# Create CSV file ordering collated data by count then alphabetically
 def emitResults(summary):
+    '''Create CSV file ordering collated data by count then alphabetically'''
     problems = list(summary.values())
 
-    # Sort problems in order of highest occurrence to lowest
     def getCount(p):
+        '''Sort problems in order of highest occurrence to lowest'''
         return p.count
 
     problems.sort(key=getCount, reverse=True)
 
-    # Writes flagged items as CSV file
+    '''Writes flagged items as CSV file'''
     with open('report.csv', 'w') as f:
         w = csv.writer(f)
         w.writerow(["Count", "Priority", "Title", "Description", "More info"])
@@ -185,6 +191,6 @@ def emitResults(summary):
             w.writerow([p.count, p.impact, p.help, p.description, p.helpUrl])
 
 
-# Execute main only if script is being executed, not imported
+'''Execute main only if script is being executed, not imported'''
 if __name__ == '__main__':
     main()
