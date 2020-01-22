@@ -11,12 +11,10 @@ from axe_selenium_python import Axe
 from argparse import ArgumentParser
 
 # Log more information messages to the shell
-
 logger = logging.getLogger()
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(message)s')
-
 
 class ProblemAggregator:
     def __init__(self):
@@ -57,20 +55,17 @@ def main():
     emitResults(summary)
 
 # Optional argument to see script running in the browser
-
-
 def parseCommandLine():
     parser = ArgumentParser()
     parser.add_argument('--visible', action='store_true',
                         help='display browser')
+    parser.add_argument('--standard', choices=['wcag2a', 'wcag2aa'], default=None, help='choose which standard to test against')
     parser.add_argument(
         'input', help='runs script against chosen list of URLs')
     args = parser.parse_args()
     return args
 
 # Loads data from yaml file passed through the command line
-
-
 def loadInputFile(args):
     with open(args.input) as file:
         data = yaml.load(file.read(), Loader=yaml.SafeLoader)
@@ -78,8 +73,6 @@ def loadInputFile(args):
 
 
 # Hide Selenium running in browser when running script
-
-
 def setupHeadlessChrome(args):
     chrome_options = ChromeOptions()
     if not args.visible:
@@ -129,8 +122,6 @@ def loginToPage(browser, url):
     )
 
 # Detect element on landing page after log in
-
-
 def awaitFirstDrawOnPage(browser):
     WebDriverWait(browser, 10).until(
         SeleniumExpectedConditions.presence_of_element_located(
@@ -139,8 +130,6 @@ def awaitFirstDrawOnPage(browser):
 
 
 # Detect whether Axe should be run with log in details or not
-
-
 def processPages(args, data):
     results = []
     for page in data['pages']:
@@ -153,8 +142,6 @@ def processPages(args, data):
     return results
 
 # Run Axe from the command line
-
-
 def runAxeReport(browser, args, page):
     logger.info("Running Axe against %s", page['url'])
     pageUrl = page['url']
@@ -171,8 +158,6 @@ def closeBrowser(browser):
     browser.quit()
 
 # Filter through problems flagged by the Axe report and collate duplicates
-
-
 def aggregateResults(results):
     ag = ProblemAggregator()
     for result in results:
@@ -180,8 +165,6 @@ def aggregateResults(results):
     return ag.getSummary()
 
 # Create CSV file ordering collated data by count then alphabetically
-
-
 def emitResults(summary):
     problems = list(summary.values())
 
