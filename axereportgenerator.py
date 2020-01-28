@@ -199,9 +199,9 @@ def emitResults(summary):
     '''Writes flagged items as CSV file'''
     with open('report.csv', 'w') as f:
         w = csv.writer(f)
-        w.writerow(["Count", "Priority", "Title", "URLs", "Description", "More info"])
+        w.writerow(["Count", "Priority", "URLs", "Title", "Description", "More info"])
         for p in problems:
-            w.writerow([p.count, p.impact, p.help, listToString(p.urls), p.description, p.helpUrl])
+            w.writerow([p.count, p.impact, listToString(p.urls), p.help, p.description, p.helpUrl])
 
 '''Execute main only if script is being executed, not imported'''
 if __name__ == '__main__':
