@@ -30,6 +30,7 @@ class ProblemAggregator:
                     audit['impact'], audit['help'], audit['description'], audit['helpUrl'])
             problem = self.problems[audit['id']]
             problem.incrementCount(len(audit['nodes']))
+            problem.urls.append(result['url'])
 
     def getSummary(self):
         return self.problems
@@ -38,6 +39,7 @@ class Problem:
     def __init__(self, impact, help, description, helpUrl):
         self.impact = impact
         self.help = help
+        self.urls = []
         self.description = description
         self.helpUrl = helpUrl
         self.count = 0
@@ -164,6 +166,7 @@ def runAxeReport(browser, args, page):
     else:
         logger.info('Collating all results')
         results = axe.run()
+    results['url'] = page['url']
     return results
 
 def closeBrowser(browser):
@@ -186,12 +189,19 @@ def emitResults(summary):
 
     problems.sort(key=getCount, reverse=True)
 
+    def listToString(s):  
+    
+        '''Initialise empty string'''
+        stringify = " " 
+
+        return stringify.join(s)
+
     '''Writes flagged items as CSV file'''
     with open('report.csv', 'w') as f:
         w = csv.writer(f)
-        w.writerow(["Count", "Priority", "Title", "Description", "More info"])
+        w.writerow(["Count", "Priority", "Title", "URLs", "Description", "More info"])
         for p in problems:
-            w.writerow([p.count, p.impact, p.help, p.description, p.helpUrl])
+            w.writerow([p.count, p.impact, p.help, listToString(p.urls), p.description, p.helpUrl])
 
 '''Execute main only if script is being executed, not imported'''
 if __name__ == '__main__':
