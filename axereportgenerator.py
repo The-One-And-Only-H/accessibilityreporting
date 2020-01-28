@@ -192,7 +192,7 @@ def emitResults(summary):
     def listToString(s):  
     
         '''Initialise empty string'''
-        stringify = " " 
+        stringify = " " + "\n"
 
         return stringify.join(s)
 
