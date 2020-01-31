@@ -217,8 +217,7 @@ def emitResults(summary):
     for column_cells in ws.columns:
         length = max(len(as_text(cell.value)) for cell in column_cells)
         ws.column_dimensions[column_cells[0].column].width = length
-
-    # Create loop to set height of rows
+        ws.column_dimensions[column_cells[0].column].height = length
 
     header = Font(color='00FF0000', bold=True)
 
