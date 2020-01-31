@@ -61,13 +61,13 @@ def main():
     summary = aggregateResults(results)
     emitResults(summary)
 
-# Optional argument to see script running in the brosheeter
+# Optional argument to see script running in the browser
 
 
 def parseCommandLine():
     parser = ArgumentParser()
     parser.add_argument('--visible', action='store_true',
-                        help='display brosheeter')
+                        help='display browser')
     parser.add_argument(
         'input', help='runs script against chosen list of URLs')
     args = parser.parse_args()
@@ -82,26 +82,26 @@ def loadInputFile(args):
     return data
 
 
-# Hide Selenium running in brosheeter when running script
+# Hide Selenium running in browser when running script
 
 
 def setupHeadlessChrome(args):
     chrome_options = ChromeOptions()
     if not args.visible:
         chrome_options.add_argument("--headless")
-    brosheeter = webdriver.Chrome(
+    browser = webdriver.Chrome(
         executable_path="chromedriver", options=chrome_options)
 
-    return brosheeter
+    return browser
 
 
-def loginToPage(brosheeter, url):
+def loginToPage(browser, url):
     logger.info('Logging into %s', url)
 
-    brosheeter.get(url)
+    browser.get(url)
 
     # This will await the first load on the login page, based on that 'maincontent' is drawn
-    WebDriverWait(brosheeter, 10).until(
+    WebDriverWait(browser, 10).until(
         SeleniumExpectedConditions.presence_of_element_located(
             (By.ID, "maincontent"))
     )
@@ -111,24 +111,24 @@ def loginToPage(brosheeter, url):
     # password = Password1
 
     # Here we do find the first input element and inputs some text into it
-    usernameElement = brosheeter.find_element_by_name("userNameOrEmail")
-    passwordElement = brosheeter.find_element_by_name("password")
+    usernameElement = browser.find_element_by_name("userNameOrEmail")
+    passwordElement = browser.find_element_by_name("password")
 
     usernameElement.send_keys('h@neverbland.com')
     passwordElement.send_keys('Password1')
 
     # Accept the cookies
-    brosheeter.find_elements_by_xpath(
+    browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Accept')]")[0].click()
-    WebDriverWait(brosheeter, 10).until_not(
+    WebDriverWait(browser, 10).until_not(
         SeleniumExpectedConditions.presence_of_element_located(
             (By.XPATH, "//button//*[contains(text(), 'Accept')]"))
     )
 
     # Press the login button
-    brosheeter.find_elements_by_xpath(
+    browser.find_elements_by_xpath(
         "//button//*[contains(text(), 'Log in')]")[0].click()
-    WebDriverWait(brosheeter, 10).until_not(
+    WebDriverWait(browser, 10).until_not(
         SeleniumExpectedConditions.presence_of_element_located(
             (By.XPATH, "//button//*[contains(text(), 'Log in')]"))
     )
@@ -136,8 +136,8 @@ def loginToPage(brosheeter, url):
 # Detect element on landing page after log in
 
 
-def awaitFirstDrawOnPage(brosheeter):
-    WebDriverWait(brosheeter, 10).until(
+def awaitFirstDrawOnPage(browser):
+    WebDriverWait(browser, 10).until(
         SeleniumExpectedConditions.presence_of_element_located(
             (By.XPATH, "//h2[contains(text(), 'Hi')]"))
     )
@@ -149,22 +149,22 @@ def awaitFirstDrawOnPage(brosheeter):
 def processPages(args, data):
     results = []
     for page in data['pages']:
-        brosheeter = setupHeadlessChrome(args)
+        browser = setupHeadlessChrome(args)
         if page.get('require_login'):
-            loginToPage(brosheeter, data['login']['url'])
-            awaitFirstDrawOnPage(brosheeter)
-        results.append(runAxeReport(brosheeter, args, page))
-        closeBrosheeter(brosheeter)
+            loginToPage(browser, data['login']['url'])
+            awaitFirstDrawOnPage(browser)
+        results.append(runAxeReport(browser, args, page))
+        closeBrowser(browser)
     return results
 
 # Run Axe from the command line
 
 
-def runAxeReport(brosheeter, args, page):
+def runAxeReport(browser, args, page):
     logger.info("Running Axe against %s", page['url'])
     pageUrl = page['url']
-    brosheeter.get(pageUrl)
-    axe = Axe(brosheeter)
+    browser.get(pageUrl)
+    axe = Axe(browser)
     # Inject axe-core javascript into page
     axe.inject()
     # Run axe accessibility checks
@@ -172,8 +172,8 @@ def runAxeReport(brosheeter, args, page):
     return results
 
 
-def closeBrosheeter(brosheeter):
-    brosheeter.quit()
+def closeBrowser(browser):
+    browser.quit()
 
 # Filter through problems flagged by the Axe report and collate duplicates
 
@@ -204,7 +204,6 @@ def emitResults(summary):
     ''' Create a new blank Workbook to record flagged items '''
     wb = openpyxl.Workbook() 
     
-    ''' Get workbook active sheet '''
     ws = wb.active 
 
     ''' Write to the cells '''     
