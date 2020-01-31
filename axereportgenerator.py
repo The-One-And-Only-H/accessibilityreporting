@@ -196,6 +196,11 @@ def emitResults(summary):
 
     problems.sort(key=getCount, reverse=True)
 
+    def as_text(value):
+        if value is None:
+            return ""
+        return str(value)
+
     ''' Create a new blank Workbook to record flagged items '''
     wb = openpyxl.Workbook() 
     
@@ -208,11 +213,12 @@ def emitResults(summary):
     for p in problems:
         ws.append([p.count, p.impact, p.help, p.description, p.helpUrl])
     
-    ''' Set the height of the row '''
-    #ws.row_dimensions.height = 20
-    
-    ''' Set the width of the row '''
-    #ws.row_dimensions.width = 100
+    ''' Set the width of rows to fit text '''
+    for column_cells in ws.columns:
+        length = max(len(as_text(cell.value)) for cell in column_cells)
+        ws.column_dimensions[column_cells[0].column].width = length
+
+    # Create loop to set height of rows
 
     header = Font(color='00FF0000', bold=True)
 

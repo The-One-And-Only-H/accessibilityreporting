@@ -1,3 +1,4 @@
 PyYAML>=5.3,<5.4
 selenium>=3.141,<3.142 
 axe-selenium-python>=2.1,<2.2
+openpyxl==2.4.9
