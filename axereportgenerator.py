@@ -1,13 +1,18 @@
 import logging
+
 import yaml
-import csv
+
+from openpyxl import Workbook
+from openpyxl.styles import Font
 
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as SeleniumExpectedConditions
 from selenium.webdriver.common.by import By
+
 from axe_selenium_python import Axe
+
 from argparse import ArgumentParser
 
 # Log more information messages to the shell
@@ -191,14 +196,38 @@ def emitResults(summary):
 
     problems.sort(key=getCount, reverse=True)
 
-    # Writes flagged items as CSV file
-    with open('report.csv', 'w') as f:
-        w = csv.writer(f)
-        w.writerow(["Count", "Priority", "Title", "Description", "More info"])
-        for p in problems:
-            w.writerow([p.count, p.impact, p.help, p.description, p.helpUrl])
+    def toString(value):
+        if value is None:
+            return ""
+        return str(value)
+
+    ''' Create a new blank Workbook to record flagged items '''
+    workbook = Workbook() 
+    
+    worksheet = workbook.active 
+
+    ''' Write to the cells '''     
+    worksheet.append(["Count", "Priority", "Title", "Description", "More info"])
+
+    for p in problems:
+        worksheet.append([p.count, p.impact, p.help, p.description, p.helpUrl])
+    
+    ''' Set the width of rows to fit text '''
+    for column_cells in worksheet.columns:
+        length = max(len(toString(cell.value)) for cell in column_cells)
+        worksheet.column_dimensions[column_cells[0].column].width = length
+        worksheet.column_dimensions[column_cells[0].column].height = length
+
+    header = Font(color='00FF0000', bold=True)
+
+    ''' Enumerate the cells in the first row '''
+    for cell in worksheet["1:1"]:
+        cell.font = header
+    
+    ''' Save the file '''
+    workbook.save('report.xlsx') 
 
 
-# Execute main only if script is being executed, not imported
+''' Execute main only if script is being executed, not imported '''
 if __name__ == '__main__':
     main()
