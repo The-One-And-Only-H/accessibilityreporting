@@ -2,7 +2,7 @@ import logging
 
 import yaml
 
-import openpyxl
+from openpyxl import Workbook
 from openpyxl.styles import Font
 
 from selenium import webdriver
@@ -196,13 +196,13 @@ def emitResults(summary):
 
     problems.sort(key=getCount, reverse=True)
 
-    def as_text(value):
+    def toString(value):
         if value is None:
             return ""
         return str(value)
 
     ''' Create a new blank Workbook to record flagged items '''
-    workbook = openpyxl.Workbook() 
+    workbook = Workbook() 
     
     worksheet = workbook.active 
 
@@ -214,7 +214,7 @@ def emitResults(summary):
     
     ''' Set the width of rows to fit text '''
     for column_cells in worksheet.columns:
-        length = max(len(as_text(cell.value)) for cell in column_cells)
+        length = max(len(toString(cell.value)) for cell in column_cells)
         worksheet.column_dimensions[column_cells[0].column].width = length
         worksheet.column_dimensions[column_cells[0].column].height = length
 
