@@ -29,3 +29,4 @@ pages:
 ## Flags
 
 - Appending `--visible` to the command in the shell runs the script with a visible browser
+- Appending `--standard` to the command in the shell allows you to choose which WCAG standard to run the script against: either `wcag2a` or `wcag2aa` - running without stating which standard will run the script against all accessibility standards Axe has to offer
