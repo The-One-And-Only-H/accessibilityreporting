@@ -33,7 +33,7 @@ class ProblemAggregator:
                 continue
             if audit['id'] not in self.problems:
                 self.problems[audit['id']] = Problem(
-                    audit['impact'], audit['help'], audit['description'], audit['helpUrl'])
+                    audit['impact'], audit['help'], audit['tags'], audit['description'], audit['helpUrl'])
             problem = self.problems[audit['id']]
             problem.incrementCount(len(audit['nodes']))
             problem.urls.append(result['url'])
@@ -42,10 +42,11 @@ class ProblemAggregator:
         return self.problems
 
 class Problem:
-    def __init__(self, impact, help, description, helpUrl):
+    def __init__(self, impact, help, tags, description, helpUrl):
         self.impact = impact
-        self.help = help
         self.urls = []
+        self.help = help
+        self.tags = tags
         self.description = description
         self.helpUrl = helpUrl
         self.count = 0
@@ -105,10 +106,6 @@ def loginToPage(browser, url):
         SeleniumExpectedConditions.presence_of_element_located(
             (By.ID, 'maincontent'))
     )
-
-    '''Time to collect some user info. 'input' can be useful here'''
-    '''username = h@neverbland.com'''
-    '''password = Password1'''
 
     '''Here we do find the first input element and inputs some text into it'''
     usernameElement = browser.find_element_by_name('userNameOrEmail')
@@ -201,7 +198,6 @@ def emitResults(summary):
         return str(value)
 
     def listToString(s):  
-    
         '''Initialise empty string'''
         stringify = ' ' 
         stringify = ' ' + '\n'
@@ -214,10 +210,10 @@ def emitResults(summary):
     worksheet = workbook.active 
 
     ''' Write to the cells '''     
-    worksheet.append(['Count', 'Priority', 'URLS', 'Title', 'Description', 'More info'])
+    worksheet.append(['Count', 'Priority', 'URLS', 'Title', 'Tags', 'Description', 'More info'])
 
     for p in problems:
-        worksheet.append([p.count, p.impact, listToString(p.urls), p.help, p.description, p.helpUrl])
+        worksheet.append([p.count, p.impact, listToString(p.urls), p.help, listToString(p.tags), p.description, p.helpUrl])
     
     ''' Set the width of columns to fit text '''
     for column_cells in worksheet.columns:
