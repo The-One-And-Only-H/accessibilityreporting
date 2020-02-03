@@ -210,7 +210,7 @@ def emitResults(summary):
     worksheet = workbook.active 
 
     ''' Write to the cells '''     
-    worksheet.append(['Count', 'Priority', 'URLS', 'Title', 'Tags', 'Description', 'More info'])
+    worksheet.append(['Count', 'Priority', 'URLs', 'Title', 'Tags', 'Description', 'More info'])
 
     for p in problems:
         worksheet.append([p.count, p.impact, listToString(p.urls), p.help, listToString(p.tags), p.description, p.helpUrl])
