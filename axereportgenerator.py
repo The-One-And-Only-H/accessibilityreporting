@@ -199,16 +199,24 @@ def emitResults(summary):
             return ""
         return str(value)
 
+    def listToString(s):  
+    
+        '''Initialise empty string'''
+        stringify = " " 
+        stringify = " " + "\n"
+
+        return stringify.join(s)
+
     ''' Create a new blank Workbook to record flagged items '''
     workbook = Workbook() 
     
     worksheet = workbook.active 
 
     ''' Write to the cells '''     
-    worksheet.append(["Count", "Priority", "Title", "Description", "More info"])
+    worksheet.append(["Count", "Priority", "URLS", "Title", "Description", "More info"])
 
     for p in problems:
-        worksheet.append([p.count, p.impact, p.help, p.description, p.helpUrl])
+        worksheet.append([p.count, p.impact, listToString(p.urls), p.help, p.description, p.helpUrl])
     
     ''' Set the width of rows to fit text '''
     for column_cells in worksheet.columns:
