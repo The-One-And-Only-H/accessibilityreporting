@@ -89,9 +89,9 @@ def setupHeadlessChrome(args):
     '''Hide Selenium running in browser when running script'''
     chrome_options = ChromeOptions()
     if not args.visible:
-        chrome_options.add_argument("--headless")
+        chrome_options.add_argument('--headless')
     browser = webdriver.Chrome(
-        executable_path="chromedriver", options=chrome_options)
+        executable_path='chromedriver', options=chrome_options)
 
     return browser
 
@@ -103,41 +103,41 @@ def loginToPage(browser, url):
     '''This will await the first load on the login page, based on that 'maincontent' is drawn'''
     WebDriverWait(browser, 10).until(
         SeleniumExpectedConditions.presence_of_element_located(
-            (By.ID, "maincontent"))
+            (By.ID, 'maincontent'))
     )
 
-    '''Time to collect some user info. "input" can be useful here'''
+    '''Time to collect some user info. 'input' can be useful here'''
     '''username = h@neverbland.com'''
     '''password = Password1'''
 
     '''Here we do find the first input element and inputs some text into it'''
-    usernameElement = browser.find_element_by_name("userNameOrEmail")
-    passwordElement = browser.find_element_by_name("password")
+    usernameElement = browser.find_element_by_name('userNameOrEmail')
+    passwordElement = browser.find_element_by_name('password')
 
     usernameElement.send_keys('h@neverbland.com')
     passwordElement.send_keys('Password1')
 
     '''Accept the cookies'''
     browser.find_elements_by_xpath(
-        "//button//*[contains(text(), 'Accept')]")[0].click()
+        '//button//*[contains(text(), "Accept")]')[0].click()
     WebDriverWait(browser, 10).until_not(
         SeleniumExpectedConditions.presence_of_element_located(
-            (By.XPATH, "//button//*[contains(text(), 'Accept')]"))
+            (By.XPATH, '//button//*[contains(text(), "Accept")]'))
     )
 
     '''Press the login button'''
     browser.find_elements_by_xpath(
-        "//button//*[contains(text(), 'Log in')]")[0].click()
+        '//button//*[contains(text(), "Log in")]')[0].click()
     WebDriverWait(browser, 10).until_not(
         SeleniumExpectedConditions.presence_of_element_located(
-            (By.XPATH, "//button//*[contains(text(), 'Log in')]"))
+            (By.XPATH, '//button//*[contains(text(), "Log in")]'))
     )
 
 def awaitFirstDrawOnPage(browser):
     '''Detect element on landing page after log in'''
     WebDriverWait(browser, 10).until(
         SeleniumExpectedConditions.presence_of_element_located(
-            (By.XPATH, "//h2[contains(text(), 'Hi')]"))
+            (By.XPATH, '//h2[contains(text(), "Hi")]'))
     )
 
 def processPages(args, data):
@@ -154,7 +154,7 @@ def processPages(args, data):
 
 def runAxeReport(browser, args, page):
     '''Run Axe from the command line'''
-    logger.info("Running Axe against %s", page['url'])
+    logger.info('Running Axe against %s', page['url'])
     pageUrl = page['url']
     browser.get(pageUrl)
     axe = Axe(browser)
@@ -163,11 +163,11 @@ def runAxeReport(browser, args, page):
     '''Run axe accessibility checks'''
     if args.standard == 'wcag2a':
         logger.info('Collating wcag2a results')
-        axe_options = {"runOnly": {"type": "tag", "value": ["wcag2a"]}}
+        axe_options = {'runOnly': {'type': 'tag', 'value': ['wcag2a']}}
         results = axe.run(options=axe_options)
     elif args.standard == 'wcag2aa':
         logger.info('Collating wcag2aa results')
-        axe_options = {"runOnly": {"type": "tag", "value": ["wcag2aa"]}}
+        axe_options = {'runOnly': {'type': 'tag', 'value': ['wcag2aa']}}
         results = axe.run(options=axe_options)
     else:
         logger.info('Collating all results')
@@ -197,14 +197,14 @@ def emitResults(summary):
 
     def toString(value):
         if value is None:
-            return ""
+            return ''
         return str(value)
 
     def listToString(s):  
     
         '''Initialise empty string'''
-        stringify = " " 
-        stringify = " " + "\n"
+        stringify = ' ' 
+        stringify = ' ' + '\n'
 
         return stringify.join(s)
 
@@ -214,7 +214,7 @@ def emitResults(summary):
     worksheet = workbook.active 
 
     ''' Write to the cells '''     
-    worksheet.append(["Count", "Priority", "URLS", "Title", "Description", "More info"])
+    worksheet.append(['Count', 'Priority', 'URLS', 'Title', 'Description', 'More info'])
 
     for p in problems:
         worksheet.append([p.count, p.impact, listToString(p.urls), p.help, p.description, p.helpUrl])
@@ -232,11 +232,11 @@ def emitResults(summary):
     contents = Alignment(horizontal='left')
 
     ''' Enumerate the cells in the first row '''
-    for cell in worksheet["1:1"]:
+    for cell in worksheet['1:1']:
         cell.font = header
 
     ''' Enumerate the cells in the first column '''
-    for cell in worksheet["A"]:
+    for cell in worksheet['A']:
         cell.alignment = contents
     
     ''' Save the file '''
