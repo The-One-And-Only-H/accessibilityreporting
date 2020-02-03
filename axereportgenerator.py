@@ -202,30 +202,30 @@ def emitResults(summary):
         return str(value)
 
     ''' Create a new blank Workbook to record flagged items '''
-    wb = openpyxl.Workbook() 
+    workbook = openpyxl.Workbook() 
     
-    ws = wb.active 
+    worksheet = workbook.active 
 
     ''' Write to the cells '''     
-    ws.append(["Count", "Priority", "Title", "Description", "More info"])
+    worksheet.append(["Count", "Priority", "Title", "Description", "More info"])
 
     for p in problems:
-        ws.append([p.count, p.impact, p.help, p.description, p.helpUrl])
+        worksheet.append([p.count, p.impact, p.help, p.description, p.helpUrl])
     
     ''' Set the width of rows to fit text '''
-    for column_cells in ws.columns:
+    for column_cells in worksheet.columns:
         length = max(len(as_text(cell.value)) for cell in column_cells)
-        ws.column_dimensions[column_cells[0].column].width = length
-        ws.column_dimensions[column_cells[0].column].height = length
+        worksheet.column_dimensions[column_cells[0].column].width = length
+        worksheet.column_dimensions[column_cells[0].column].height = length
 
     header = Font(color='00FF0000', bold=True)
 
     ''' Enumerate the cells in the first row '''
-    for cell in ws["1:1"]:
+    for cell in worksheet["1:1"]:
         cell.font = header
     
     ''' Save the file '''
-    wb.save('report.xlsx') 
+    workbook.save('report.xlsx') 
 
 
 ''' Execute main only if script is being executed, not imported '''
