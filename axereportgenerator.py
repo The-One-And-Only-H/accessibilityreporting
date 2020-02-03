@@ -4,6 +4,7 @@ import yaml
 
 from openpyxl import Workbook
 from openpyxl.styles import Font
+from openpyxl.styles import Alignment
 
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions
@@ -218,17 +219,25 @@ def emitResults(summary):
     for p in problems:
         worksheet.append([p.count, p.impact, listToString(p.urls), p.help, p.description, p.helpUrl])
     
-    ''' Set the width of rows to fit text '''
+    ''' Set the width of columns to fit text '''
     for column_cells in worksheet.columns:
-        length = max(len(toString(cell.value)) for cell in column_cells)
-        worksheet.column_dimensions[column_cells[0].column].width = length
-        worksheet.column_dimensions[column_cells[0].column].height = length
+        worksheet.column_dimensions[column_cells[0].column].width = 15
 
+    ''' Set the height of rows to fit text '''
+    for row_cells in worksheet.rows:
+        worksheet.row_dimensions[row_cells[0].row].height = 25
+
+    ''' Styles output '''
     header = Font(color='00FF0000', bold=True)
+    contents = Alignment(horizontal='left')
 
     ''' Enumerate the cells in the first row '''
     for cell in worksheet["1:1"]:
         cell.font = header
+
+    ''' Enumerate the cells in the first column '''
+    for cell in worksheet["A"]:
+        cell.alignment = contents
     
     ''' Save the file '''
     workbook.save('report.xlsx') 
