@@ -1,0 +1,48 @@
+login:
+  url: https://account.develop.bigwhitewall.com/log-in
+pages:
+  - url: https://account.develop.bigwhitewall.com/log-in
+  - url: https://develop.bigwhitewall.com/
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community/all
+    require_login: true
+  - url: https://develop.bigwhitewall.com/resources/article/all-washed-up-and-nowhere-to-go
+    require_login: true
+  - url: https://develop.bigwhitewall.com/resources/articles
+    require_login: true
+  - url: https://develop.bigwhitewall.com/resources/goal-setter
+    require_login: true
+  - url: https://develop.bigwhitewall.com/resources/journal
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community/all
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community/create/choose
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community/posts/ck34n1seqb1wh0863wpj8o1yq
+    require_login: true
+  - url: https://develop.bigwhitewall.com/courses
+    require_login: true
+  - url: https://develop.bigwhitewall.com/courses/cut-down-your-drinking-armed-forces
+    require_login: true
+  - url: https://develop.bigwhitewall.com/search
+    require_login: true
+  - url: https://develop.bigwhitewall.com/notifications
+    require_login: true
+  - url: https://develop.bigwhitewall.com/friends
+    require_login: true
+  - url: https://develop.bigwhitewall.com/messages/MESSAGEID
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community/create/brick
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community/create/group-talkabout
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community/create/talkabout
+    require_login: true
+  - url: https://develop.bigwhitewall.com/resources/self-assessments
+    require_login: true
+  - url: https://develop.bigwhitewall.com/profiles/ck2d8rzfsq00u0763yjg34cqh
+    require_login: true
+  - url: https://develop.bigwhitewall.com/community/posts/ck34n1seqb1wh0863wpj8o1yq
+    require_login: true
