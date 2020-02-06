@@ -66,6 +66,7 @@ def parseCommandLine():
     Optional arguments to:
     - See the script running in the browser
     - Choose an accessibility standard to test against
+    - Choose an accessibility package to test against
     - Pass which URLs you want to test
     '''
     parser = ArgumentParser()
@@ -75,6 +76,9 @@ def parseCommandLine():
     parser.add_argument('--standard', choices=standards, 
                         metavar='NAME', 
                         help='choose which standard to test against (choices: %s, default: all)' % ', '.join(standards))
+    packages = ['axe', 'lighthouse']
+    parser.add_argument('--package', choices=packages, metavar='NAME', required=True,
+                        help='choose which package to test against (packages: %s, default: all)' % ', '.join(packages))
     parser.add_argument(
         'input', help='runs script against chosen list of URLs')
     args = parser.parse_args()
