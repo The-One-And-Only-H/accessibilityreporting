@@ -26,7 +26,7 @@ class LighthouseTask:
     def __init__(self):
         pass
 
-    def runLighthouseReport(args, page, cookies=None):
+    def runLighthouseReport(self, args, page, cookies=None):
         '''Run Lighthouse from the command line'''
         cmd = ['node', './lighthouse/lighthouse-cli', page.url, '--output', 'json']
         if not args.visible:
@@ -40,10 +40,10 @@ class LighthouseTask:
         out = json.loads(out)
         return out
 
-    def closeBrowser(browser):
+    def closeBrowser(self, browser):
         browser.quit()
 
-    def ensureLighthouse():
+    def ensureLighthouse(self):
         here = os.path.dirname(__file__)
         if here:
             os.chdir(here)
@@ -66,7 +66,7 @@ class AxeTask:
     def __init__(self):
         pass
 
-    def runAxeReport(browser, args, page):
+    def runAxeReport(self, browser, args, page):
         '''Run Axe from the command line'''
         logger.info('Running Axe against %s', page['url'])
         pageUrl = page['url']
@@ -89,10 +89,10 @@ class AxeTask:
         results['url'] = page['url']
         return results
 
-    def closeBrowser(browser):
+    def closeBrowser(self, browser):
         browser.quit()
 
-    def processPages(args, data):
+    def processPages(self, args, data):
         '''Detect whether the script should be run with log in details or not'''
         results = []
         for page in data['pages']:
@@ -100,16 +100,62 @@ class AxeTask:
             if page.get('require_login'):
                 loginToPage(browser, data['login']['url'])
                 awaitFirstDrawOnPage(browser)
-            results.append(runAxeReport(browser, args, page))
-            closeBrowser(browser)
+            results.append(self.runAxeReport(browser, args, page))
+            self.closeBrowser(browser)
         return results
+
+    def emitResults(self, summary):
+        '''Create CSV file ordering collated data by count then alphabetically'''
+        problems = list(summary.values())
 
 class MetaTagsTask:
     def __init__(self):
         pass
 
-    def generateMetaTags(args, pages):
+    def generateMetaTags(self, args, pages):
         pass
+
+    def runAxeReport(self, browser, args, page):
+        '''Run Axe from the command line'''
+        logger.info('Running Axe against %s', page['url'])
+        pageUrl = page['url']
+        browser.get(pageUrl)
+        axe = Axe(browser)
+        '''Inject axe-core javascript into page'''
+        axe.inject()
+        '''Run axe accessibility checks'''
+        if args.standard == 'wcag2a':
+            logger.info('Collating wcag2a results')
+            axe_options = {'runOnly': {'type': 'tag', 'value': ['wcag2a']}}
+            results = axe.run(options=axe_options)
+        elif args.standard == 'wcag2aa':
+            logger.info('Collating wcag2aa results')
+            axe_options = {'runOnly': {'type': 'tag', 'value': ['wcag2aa']}}
+            results = axe.run(options=axe_options)
+        else:
+            logger.info('Collating all results')
+            results = axe.run()
+        results['url'] = page['url']
+        return results
+
+    def closeBrowser(self, browser):
+        browser.quit()
+
+    def processPages(self, args, data):
+        '''Detect whether the script should be run with log in details or not'''
+        results = []
+        for page in data['pages']:
+            browser = setupHeadlessChrome(args)
+            if page.get('require_login'):
+                loginToPage(browser, data['login']['url'])
+                awaitFirstDrawOnPage(browser)
+            results.append(self.runAxeReport(browser, args, page))
+            self.closeBrowser(browser)
+        return results
+
+    def emitResults(self, summary):
+        '''Create CSV file ordering collated data by count then alphabetically'''
+        problems = list(summary.values())
 
 class ProblemAggregator:
     def __init__(self):
@@ -146,11 +192,11 @@ class Problem:
 def main():
     args = parseCommandLine()
     task = chooseTask(args)
-    ensureLighthouse()
+    #ensureLighthouse()
     data = loadInputFile(args)
-    results = processPages(args, data)
+    results = task.processPages(args, data)
     summary = aggregateResults(results)
-    tasks.emitResults(summary)
+    task.emitResults(summary)
 
 def parseCommandLine():
     '''
@@ -167,7 +213,7 @@ def parseCommandLine():
     parser.add_argument('--standard', choices=standards, 
                         metavar='NAME', 
                         help='choose which standard to test against (choices: %s, default: all)' % ', '.join(standards))
-    packages = ['axe', 'lighthouse']
+    packages = ['axe', 'lighthouse', 'metatags']
     parser.add_argument('--package', choices=packages, metavar='NAME', required=True,
                         help='choose which package to test against (packages: %s, default: all)' % ', '.join(packages))
     parser.add_argument(
@@ -247,10 +293,6 @@ def aggregateResults(results):
     for result in results:
         ag.addResult(result)
     return ag.getSummary()
-
-def emitResults(summary):
-    '''Create CSV file ordering collated data by count then alphabetically'''
-    problems = list(summary.values())
 
     def getCount(p):
         '''Sort problems in order of highest occurrence to lowest'''
