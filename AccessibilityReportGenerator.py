@@ -85,8 +85,8 @@ def parseCommandLine():
     args = parser.parse_args()
     return args
 
-'''Loads data from yaml file passed through the command line'''
 def loadInputFile(args):
+    '''Loads data from yaml file passed through the command line'''
     with open(args.input) as file:
         data = yaml.load(file.read(), Loader=yaml.SafeLoader)
     return data

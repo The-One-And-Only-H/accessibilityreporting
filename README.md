@@ -10,7 +10,7 @@ This script is for the automation of data extraction from accessibility reports 
 # Run script
 
 1. Activate the virtualenv with `source env/bin/activate`
-2. Run the script with `python AxeReportGenerator.py [yaml file]`
+2. Run the script with `python AccessibilityReportGenerator.py [yaml file]`
 
 ## Required parameters
 
