@@ -161,6 +161,9 @@ def whichPackage():
     elif args.package = 'lighthouse':
         runLighthouseReport(args, page)
 
+def generateMetaTags(args, pages):
+    pass
+
 def runLighthouseReport(args, page, cookies=None):
     '''Run Lighthouse from the command line'''
     cmd = ['node', './lighthouse/lighthouse-cli', page.url, '--output', 'json']
