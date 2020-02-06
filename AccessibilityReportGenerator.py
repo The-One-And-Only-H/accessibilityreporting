@@ -24,89 +24,92 @@ logging.basicConfig(
 
 class LighthouseTask:
     def __init__(self):
+        pass
 
     def runLighthouseReport(args, page, cookies=None):
-    '''Run Lighthouse from the command line'''
-    cmd = ['node', './lighthouse/lighthouse-cli', page.url, '--output', 'json']
-    if not args.visible:
-        cmd.append('--chrome-flags="--headless"')
-    if cookies:
-        cookies = [{'name': c['name'], 'value': c['value']} for c in cookies]
-        cookies = json.dumps(cookies)
-        cmd.extend(['--extra-cookies', cookies])
+        '''Run Lighthouse from the command line'''
+        cmd = ['node', './lighthouse/lighthouse-cli', page.url, '--output', 'json']
+        if not args.visible:
+            cmd.append('--chrome-flags="--headless"')
+        if cookies:
+            cookies = [{'name': c['name'], 'value': c['value']} for c in cookies]
+            cookies = json.dumps(cookies)
+            cmd.extend(['--extra-cookies', cookies])
 
-    out = subprocess.check_output(cmd)
-    out = json.loads(out)
-    return out
+        out = subprocess.check_output(cmd)
+        out = json.loads(out)
+        return out
 
     def closeBrowser(browser):
-    browser.quit()
+        browser.quit()
 
     def ensureLighthouse():
-    here = os.path.dirname(__file__)
-    if here:
-        os.chdir(here)
-    if os.path.exists('lighthouse'):
-        return
-    ''' 
-    Branch containing --extra-cookies
-    Until https://github.com/GoogleChrome/lighthouse/pull/9170 merged 
-    '''
-    logger.info('Installing Lighthouse')
-    subprocess.check_call(
-        ["git", "clone", "https://github.com/RynatSibahatau/lighthouse.git"])
-    os.chdir('lighthouse')
-    subprocess.check_call(["npm", "install", "yarn"])
-    subprocess.check_call(["./node_modules/.bin/yarn"])
-    subprocess.check_call(["./node_modules/.bin/yarn", "build-all"])
-    os.chdir('..')
+        here = os.path.dirname(__file__)
+        if here:
+            os.chdir(here)
+        if os.path.exists('lighthouse'):
+            return
+        ''' 
+        Branch containing --extra-cookies
+        Until https://github.com/GoogleChrome/lighthouse/pull/9170 merged 
+        '''
+        logger.info('Installing Lighthouse')
+        subprocess.check_call(
+            ["git", "clone", "https://github.com/RynatSibahatau/lighthouse.git"])
+        os.chdir('lighthouse')
+        subprocess.check_call(["npm", "install", "yarn"])
+        subprocess.check_call(["./node_modules/.bin/yarn"])
+        subprocess.check_call(["./node_modules/.bin/yarn", "build-all"])
+        os.chdir('..')
 
 class AxeTask:
     def __init__(self):
+        pass
 
     def runAxeReport(browser, args, page):
-    '''Run Axe from the command line'''
-    logger.info('Running Axe against %s', page['url'])
-    pageUrl = page['url']
-    browser.get(pageUrl)
-    axe = Axe(browser)
-    '''Inject axe-core javascript into page'''
-    axe.inject()
-    '''Run axe accessibility checks'''
-    if args.standard == 'wcag2a':
-        logger.info('Collating wcag2a results')
-        axe_options = {'runOnly': {'type': 'tag', 'value': ['wcag2a']}}
-        results = axe.run(options=axe_options)
-    elif args.standard == 'wcag2aa':
-        logger.info('Collating wcag2aa results')
-        axe_options = {'runOnly': {'type': 'tag', 'value': ['wcag2aa']}}
-        results = axe.run(options=axe_options)
-    else:
-        logger.info('Collating all results')
-        results = axe.run()
-    results['url'] = page['url']
-    return results
+        '''Run Axe from the command line'''
+        logger.info('Running Axe against %s', page['url'])
+        pageUrl = page['url']
+        browser.get(pageUrl)
+        axe = Axe(browser)
+        '''Inject axe-core javascript into page'''
+        axe.inject()
+        '''Run axe accessibility checks'''
+        if args.standard == 'wcag2a':
+            logger.info('Collating wcag2a results')
+            axe_options = {'runOnly': {'type': 'tag', 'value': ['wcag2a']}}
+            results = axe.run(options=axe_options)
+        elif args.standard == 'wcag2aa':
+            logger.info('Collating wcag2aa results')
+            axe_options = {'runOnly': {'type': 'tag', 'value': ['wcag2aa']}}
+            results = axe.run(options=axe_options)
+        else:
+            logger.info('Collating all results')
+            results = axe.run()
+        results['url'] = page['url']
+        return results
 
     def closeBrowser(browser):
-    browser.quit()
+        browser.quit()
 
     def processPages(args, data):
-    '''Detect whether the script should be run with log in details or not'''
-    results = []
-    for page in data['pages']:
-        browser = setupHeadlessChrome(args)
-        if page.get('require_login'):
-            loginToPage(browser, data['login']['url'])
-            awaitFirstDrawOnPage(browser)
-        results.append(runAxeReport(browser, args, page))
-        closeBrowser(browser)
-    return results
+        '''Detect whether the script should be run with log in details or not'''
+        results = []
+        for page in data['pages']:
+            browser = setupHeadlessChrome(args)
+            if page.get('require_login'):
+                loginToPage(browser, data['login']['url'])
+                awaitFirstDrawOnPage(browser)
+            results.append(runAxeReport(browser, args, page))
+            closeBrowser(browser)
+        return results
 
 class MetaTagsTask:
     def __init__(self):
+        pass
 
     def generateMetaTags(args, pages):
-    pass
+        pass
 
 class ProblemAggregator:
     def __init__(self):
